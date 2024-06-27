@@ -1,5 +1,6 @@
 import gradio as gr
 import random
+import ast
 
 def algo1(lenght, uppercase_letters, lowercas_letters, digit, symbols):
     s=""
@@ -82,16 +83,71 @@ def generate_password():
     lowercas_letters = uppercase_letters.lower()
     digit = "0123456789"
     symbols = "(){}[]*$,;.:-_/\\&%?^*#@<>"
-    return(algo4(20,uppercase_letters, lowercas_letters, digit, symbols))
+    match(random.randint(0,3)):
+        case 0:
+            return(algo4(20,uppercase_letters, lowercas_letters, digit, symbols))
+        case 1:
+            return(algo4(20,uppercase_letters, lowercas_letters, digit, symbols))
+        case 2:
+            return(algo4(20,uppercase_letters, lowercas_letters, digit, symbols))
+        case 3:
+            return(algo4(20,uppercase_letters, lowercas_letters, digit, symbols))
+
+def store(service, username, password):
+    if(service==''):
+        return('','','','please write the service where you would use your password')
+    if(username==''):
+        return('','','','please write the username')
+    if (password==""):
+        return('','','','please write or generate a password')
+    data=open('passwords.json', 'r').read()
+    data=ast.literal_eval(data)
+    data.append({"service": service, "username": username, "password": password})
+    data=str(data)
+    data=data.replace("'",'"')
+    with open('passwords.json', 'w') as f:
+        f.write(str(data))
+    return('','','','Done!')
+
+def get_password(service_get):
+    data=open('passwords.json', 'r').read()
+    data=ast.literal_eval(data)
+    result=None
+    for r in data:
+        if r["service"].lower()==service_get.lower():
+            result=r
+    if result is None:
+        return('','','',"Can't find a password stored for this service")
+    return(result['username'], result['password'], 'Done!')
+
 
 
 
 if __name__=='__main__':
     with gr.Blocks() as demo:
-
         gr.Markdown("# Password manager")
-        result=gr.Textbox(label="Result")
-        generate=gr.Button("Generate password")
-        
-        generate.click(fn=generate_password, inputs=[], outputs=[result])
+        with gr.Row():
+            with gr.Column():
+                service=gr.Textbox(label="What is this password for?")
+                username=gr.Textbox(label="Username/E-mail")
+                password=gr.Textbox(label="Password")
+                result=gr.Textbox(label="Result")
+                with gr.Row():
+                    generate=gr.Button("Generate password")
+                    update_data=gr.Button("Store pssword")
+            with gr.Column():
+                service_get=gr.Textbox(label="What is this password for?")
+                username_get=gr.Textbox(label="Username/E-mail")
+                password_get=gr.Textbox(label="Password")
+                result_get=gr.Textbox(label="Result")
+                with gr.Row():
+                    get_data=gr.Button("Get password")
+                    update=gr.Button("Update")
+                    remove=gr.Button("Remove")
+        generate.click(fn=generate_password, inputs=[], outputs=[password])
+        update_data.click(fn=store, inputs=[service, username, password], outputs=[service, username, password, result])
+        get_data.click(fn=get_password, inputs=[service_get], outputs=[username_get, password_get, result_get])
+    
+    
+    
     demo.launch(share=False)
