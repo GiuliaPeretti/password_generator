@@ -102,6 +102,13 @@ def store(service, username, password):
         return('','','','please write or generate a password')
     data=open('passwords.json', 'r').read()
     data=ast.literal_eval(data)
+    find=False
+    for d in data:
+        if d['service']==service:
+            find=True
+            break
+    if find:
+        return('','','','Another password is already stored for this service, please update it or remove it')
     data.append({"service": service, "username": username, "password": password})
     data=str(data)
     data=data.replace("'",'"')
@@ -120,8 +127,49 @@ def get_password(service_get):
         return('','','',"Can't find a password stored for this service")
     return(result['username'], result['password'], 'Done!')
 
+def update_password(service_get, username_get, password_get):
+    if(service==''):
+        return('','','','please write the service where you would use your password')
+    if(username==''):
+        return('','','','please write the username')
+    if (password==""):
+        return('','','','please write or generate a password')
+    data=open('passwords.json', 'r').read()
+    data=ast.literal_eval(data)
+    result=None
+    for i in range(len(data)):
+        if data[i]["service"].lower()==service_get.lower():
+            result=data[i]
+    if result is None:
+        return('','','',"Can't find a password stored for this service")
+    data[i]['service']=service_get
+    data[i]['username']=username_get
+    data[i]['password']=password_get
 
+    data=str(data)
+    data=data.replace("'",'"')
+    with open('passwords.json', 'w') as f:
+        f.write(str(data))
+    return('','','','Done!')
 
+def remove_password(service_get):
+    if(service==''):
+        return('','','','please write the service where you would use your password')
+    data=open('passwords.json', 'r').read()
+    data=ast.literal_eval(data)
+    result=None
+    for i in range(len(data)):
+        if data[i]["service"].lower()==service_get.lower():
+            result=data[i]
+    if result is None:
+        return('','','',"Can't find a password stored for this service")
+    data.pop(i)
+
+    data=str(data)
+    data=data.replace("'",'"')
+    with open('passwords.json', 'w') as f:
+        f.write(str(data))
+    return('','','','Done!')
 
 if __name__=='__main__':
     with gr.Blocks() as demo:
@@ -146,8 +194,8 @@ if __name__=='__main__':
                     remove=gr.Button("Remove")
         generate.click(fn=generate_password, inputs=[], outputs=[password])
         update_data.click(fn=store, inputs=[service, username, password], outputs=[service, username, password, result])
-        get_data.click(fn=get_password, inputs=[service_get], outputs=[username_get, password_get, result_get])
-    
-    
+        get_data.click(fn=get_password, inputs=[service_get], outputs=[service_get, username_get, password_get, result_get])
+        update.click(fn=update_password, inputs=[service_get, username_get, password_get], outputs=[service_get, username_get, password_get, result_get])
+        remove.click(fn=remove_password, inputs=[service_get], outputs=[service_get, username_get, password_get, result_get])
     
     demo.launch(share=False)
